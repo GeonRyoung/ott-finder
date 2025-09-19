@@ -1,9 +1,6 @@
 package com.example.ott_finder;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -11,10 +8,11 @@ import java.util.List;
 public class ContentController {
 
     private final ContentRepository contentRepository;
+    private final OttRepository ottRepository;
 
-
-    public ContentController(ContentRepository contentRepository) {
+    public ContentController(ContentRepository contentRepository, OttRepository ottRepository) {
         this.contentRepository = contentRepository;
+        this.ottRepository = ottRepository;
     }
 
     @PostMapping("/api/contents")
@@ -27,5 +25,24 @@ public class ContentController {
     @GetMapping("/api/contents")
     public List<Content> getAllContents(){
         return contentRepository.findAll();
+    }
+
+    @GetMapping("/api/contents/search")
+    public List<Content> searchContents(@RequestParam("title") String keyword){
+        return contentRepository.findByTitleContaining(keyword);
+    }
+
+    @PostMapping("/api/contents/{contentId}/otts/{ottId}")
+    public String addOttContent(@PathVariable Long contentId, @PathVariable Long ottId){
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 콘텐츠가 없습니다. id=" + contentId));
+
+        Ott ott = ottRepository.findById(ottId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 OTT가 없습니다. ott=" + ottId));
+
+        content.getOtts().add(ott);
+        contentRepository.save(content);
+
+        return "연결 성공";
     }
 }
