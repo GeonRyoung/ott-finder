@@ -14,8 +14,10 @@ public class Content {
     private String title;
     private String category;
     private String imageUrl;
-    private String releaseYear;
+    private Integer releaseYear;
     private String director;
+
+    @Column(length = 1000)
     private String description;
 
     @ManyToMany
@@ -29,7 +31,7 @@ public class Content {
     protected Content(){}
 
     public Content(String title, String category, String imageUrl,
-                   String releaseYear, String director, String description) {
+                   Integer releaseYear, String director, String description) {
         this.title = title;
         this.category = category;
         this.imageUrl = imageUrl;
@@ -50,7 +52,7 @@ public class Content {
     public String getImageUrl() {
         return imageUrl;
     }
-    public String getReleaseYear() {
+    public Integer getReleaseYear() {
         return releaseYear;
     }
     public String getDirector() {

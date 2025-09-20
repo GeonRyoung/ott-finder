@@ -9,10 +9,12 @@ public class ContentController {
 
     private final ContentRepository contentRepository;
     private final OttRepository ottRepository;
+    private final TmdbService tmdbService;
 
-    public ContentController(ContentRepository contentRepository, OttRepository ottRepository) {
+    public ContentController(ContentRepository contentRepository, OttRepository ottRepository, TmdbService tmdbService) {
         this.contentRepository = contentRepository;
         this.ottRepository = ottRepository;
+        this.tmdbService = tmdbService;
     }
 
     @PostMapping("/api/contents")
@@ -56,5 +58,11 @@ public class ContentController {
         contentRepository.save(content);
 
         return "연결 성공";
+    }
+
+    @PostMapping("/api/contents/fetch-tmdb")
+    public String fetchAndSaveMovies(){
+        tmdbService.fetchAndSavePopularMovies();
+        return "TMDB 인기 영화 데이터 저장 성공";
     }
 }

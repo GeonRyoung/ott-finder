@@ -4,7 +4,7 @@ public class ContentCreateRequest {
     private String title;
     private String category;
     private String imageUrl;
-    private String releaseYear;
+    private Integer releaseYear;
     private String director;
     private String description;
 
@@ -20,7 +20,7 @@ public class ContentCreateRequest {
         return imageUrl;
     }
 
-    public String getReleaseYear() {
+    public Integer getReleaseYear() {
         return releaseYear;
     }
 
