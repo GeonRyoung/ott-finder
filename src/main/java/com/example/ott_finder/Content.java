@@ -13,6 +13,10 @@ public class Content {
     private Long id;
     private String title;
     private String category;
+    private String imageUrl;
+    private String releaseYear;
+    private String director;
+    private String description;
 
     @ManyToMany
     @JoinTable(
@@ -24,9 +28,14 @@ public class Content {
 
     protected Content(){}
 
-    public Content(String title, String category) {
+    public Content(String title, String category, String imageUrl,
+                   String releaseYear, String director, String description) {
         this.title = title;
         this.category = category;
+        this.imageUrl = imageUrl;
+        this.releaseYear = releaseYear;
+        this.director = director;
+        this.description = description;
     }
 
     public Long getId() {
@@ -38,6 +47,19 @@ public class Content {
     public String getCategory() {
         return category;
     }
+    public String getImageUrl() {
+        return imageUrl;
+    }
+    public String getReleaseYear() {
+        return releaseYear;
+    }
+    public String getDirector() {
+        return director;
+    }
+    public String getDescription() {
+        return description;
+    }
+
     public Set<Ott> getOtts(){
         return otts;
     }

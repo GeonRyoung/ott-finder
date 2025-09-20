@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTT Finder</title>
+    <style>
+        /* 기본 스타일 */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+
+        /* 검색 및 필터 영역 */
+        #search-filter-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; align-items: center; justify-content: center; }
+        #search-input { flex-grow: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; max-width: 400px; }
+        #search-button, .category-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        #search-button:hover, .category-button:hover { background-color: #0056b3; }
+        .category-button.active { background-color: #28a745; } /* 선택된 카테고리 버튼 스타일 */
+
+        /* 콘텐츠 목록 (그리드 레이아웃) */
+        #content-list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 반응형 그리드 */
+            gap: 25px;
+        }
+
+        /* 각 콘텐츠 카드 */
+        .content-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .content-poster { width: 100%; height: 250px; object-fit: cover; background-color: #eee; } /* 이미지 비율 유지 */
+        .content-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .content-title { font-size: 1.3em; font-weight: bold; margin-bottom: 8px; color: #2c3e50; }
+        .content-subtitle { font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        .content-description { font-size: 0.9em; color: #555; line-height: 1.5; margin-top: 10px; }
+
+        .ott-tags { margin-top: 10px; }
+        .ott-tag {
+            display: inline-block;
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        .no-content { text-align: center; color: #777; padding: 50px; font-size: 1.1em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>OTT Finder</h1>
+
+    <div id="search-filter-container">
+        <input type="text" id="search-input" placeholder="제목으로 검색...">
+        <button id="search-button">검색</button>
+        <button class="category-button" data-category="">전체</button>
+        <button class="category-button" data-category="영화">영화</button>
+        <button class="category-button" data-category="드라마">드라마</button>
+        <button class="category-button" data-category="애니메이션">애니메이션</button>
+    </div>
+
+    <div id="content-list-container">
+        <div class="no-content">콘텐츠를 불러오는 중...</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const categoryButtons = document.querySelectorAll('.category-button');
+        const contentListContainer = document.getElementById('content-list-container');
+
+        let currentCategory = ''; // 현재 선택된 카테고리 필터
+
+        // 콘텐츠 목록을 불러오는 함수
+        const fetchContents = async (keyword = '', category = '') => {
+            let url = '/api/contents/search';
+            const params = new URLSearchParams();
+
+            if (keyword) {
+                params.append('title', keyword);
+            }
+            if (category) {
+                params.append('category', category);
+            }
+
+            if (params.toString()) { // 파라미터가 있을 경우에만 ? 붙여서 연결
+                url += '?' + params.toString();
+            } else if (!keyword && !category) { // 아무 파라미터도 없으면 전체 조회 URL로
+                url = '/api/contents'; // 전체 조회 API
+            }
+
+            try {
+                const response = await fetch(url); // 백엔드 API 호출
+                const contents = await response.json(); // JSON 응답을 자바스크립트 객체로 변환
+
+                contentListContainer.innerHTML = ''; // 기존 목록 초기화
+
+                if (contents.length === 0) {
+                    contentListContainer.innerHTML = '<div class="no-content">콘텐츠가 없습니다.</div>';
+                    return;
+                }
+
+                contents.forEach(content => {
+                    const card = document.createElement('div');
+                    card.className = 'content-card';
+
+                    // 포스터 이미지
+                    const poster = document.createElement('img');
+                    poster.className = 'content-poster';
+                    poster.src = content.imageUrl || 'https://via.placeholder.com/280x250?text=No+Image'; // 이미지가 없으면 기본 이미지
+                    poster.alt = content.title + ' 포스터';
+                    card.appendChild(poster);
+
+                    // 정보 영역
+                    const info = document.createElement('div');
+                    info.className = 'content-info';
+
+                    const title = document.createElement('div');
+                    title.className = 'content-title';
+                    title.textContent = content.title;
+                    info.appendChild(title);
+
+                    const subtitle = document.createElement('div');
+                    subtitle.className = 'content-subtitle';
+                    let subtitleText = '';
+                    if (content.releaseYear) subtitleText += content.releaseYear + '년';
+                    if (content.director) subtitleText += (subtitleText ? ' | ' : '') + content.director + ' 감독';
+                    if (subtitleText) info.appendChild(subtitle);
+                    subtitle.textContent = subtitleText;
+
+
+                    // OTT 태그 목록
+                    const ottTagsDiv = document.createElement('div');
+                    ottTagsDiv.className = 'ott-tags';
+                    if (content.otts && content.otts.length > 0) {
+                        content.otts.forEach(ott => {
+                            const span = document.createElement('span');
+                            span.className = 'ott-tag';
+                            span.textContent = ott.name;
+                            ottTagsDiv.appendChild(span);
+                        });
+                    } else {
+                        const span = document.createElement('span');
+                        span.className = 'ott-tag';
+                        span.textContent = '제공 OTT 없음';
+                        ottTagsDiv.appendChild(span);
+                    }
+                    info.appendChild(ottTagsDiv);
+
+                    // 소개글
+                    const description = document.createElement('p');
+                    description.className = 'content-description';
+                    description.textContent = content.description || '소개 내용이 없습니다.';
+                    info.appendChild(description);
+
+                    card.appendChild(info);
+                    contentListContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('콘텐츠를 불러오는 중 오류 발생:', error);
+                contentListContainer.innerHTML = '<div class="no-content">데이터를 불러오지 못했습니다. 서버가 실행 중인지 확인하세요.</div>';
+            }
+        };
+
+        // 초기 로딩 시 전체 콘텐츠 불러오기
+        fetchContents();
+
+        // 검색 버튼 클릭 이벤트
+        searchButton.addEventListener('click', () => {
+            const keyword = searchInput.value;
+            fetchContents(keyword, currentCategory);
+        });
+
+        // 엔터 키로 검색 이벤트
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const keyword = searchInput.value;
+                fetchContents(keyword, currentCategory);
+            }
+        });
+
+        // 카테고리 버튼 클릭 이벤트
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // 모든 버튼의 active 클래스 제거
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                // 클릭된 버튼에 active 클래스 추가
+                button.classList.add('active');
+
+                currentCategory = button.dataset.category; // data-category 값 가져오기
+                const keyword = searchInput.value; // 현재 검색창 키워드 유지
+                fetchContents(keyword, currentCategory);
+            });
+        });
+
+        // '전체' 버튼 초기 활성화
+        document.querySelector('.category-button[data-category=""]').classList.add('active');
+    });
+</script>
+</body>
+</html>
