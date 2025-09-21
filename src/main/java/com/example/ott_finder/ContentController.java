@@ -65,4 +65,10 @@ public class ContentController {
         tmdbService.fetchAndSavePopularMovies();
         return "TMDB 인기 영화 데이터 저장 성공";
     }
+
+    @PostMapping("/api/contents/search-tmdb")
+    public String searchTmdb(@RequestParam String query) {
+        tmdbService.searchAndSaveMovies(query);
+        return "TMDB 검색 및 저장 성공!";
+    }
 }

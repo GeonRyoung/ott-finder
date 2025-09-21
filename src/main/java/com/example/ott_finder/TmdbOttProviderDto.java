@@ -7,7 +7,7 @@ public class TmdbOttProviderDto {
     @JsonProperty("provider_id")
     private Integer providerId;
 
-    @JsonProperty("provider-name")
+    @JsonProperty("provider_name")
     private String providerName;
 
     public Integer getProviderId() {

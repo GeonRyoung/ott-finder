@@ -5,9 +5,9 @@ import java.util.Map;
 
 public class TmdbWatchProviderResponse {
 
-    private Map<String, List<TmdbOttProviderDto>> results;
+    private List<TmdbOttProviderDto> results;
 
-    public Map<String, List<TmdbOttProviderDto>> getResults(){
+    public List<TmdbOttProviderDto> getResults(){
         return results;
     }
 }

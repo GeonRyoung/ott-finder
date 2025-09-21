@@ -190,17 +190,45 @@
         // 초기 로딩 시 전체 콘텐츠 불러오기
         fetchContents();
 
-        // 검색 버튼 클릭 이벤트
-        searchButton.addEventListener('click', () => {
+        // =====▼▼▼ 검색 이벤트 리스너 부분을 수정했습니다 ▼▼▼=====
+
+        // 검색 버튼 클릭 이벤트 수정
+        searchButton.addEventListener('click', async () => {
             const keyword = searchInput.value;
-            fetchContents(keyword, currentCategory);
+            if (!keyword) {
+                fetchContents('', currentCategory); // 검색어가 없으면 그냥 현재 카테고리 필터로 조회
+                return;
+            }
+
+            try {
+                // 1. TMDB에서 검색해서 우리 DB로 저장하는 API 호출 (POST)
+                await fetch(`/api/contents/search-tmdb?query=${keyword}`, { method: 'POST' });
+
+                // 2. 저장이 완료되면, 우리 DB에서 검색 결과를 가져와 화면에 표시 (GET)
+                fetchContents(keyword, currentCategory);
+            } catch (error) {
+                console.error('TMDB 검색 또는 데이터 저장 중 오류 발생:', error);
+            }
         });
 
-        // 엔터 키로 검색 이벤트
-        searchInput.addEventListener('keypress', (e) => {
+        // 엔터 키로 검색 이벤트 수정
+        searchInput.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
                 const keyword = searchInput.value;
-                fetchContents(keyword, currentCategory);
+                if (!keyword) {
+                    fetchContents('', currentCategory);
+                    return;
+                }
+
+                try {
+                    // 1. TMDB에서 검색해서 우리 DB로 저장하는 API 호출 (POST)
+                    await fetch(`/api/contents/search-tmdb?query=${keyword}`, { method: 'POST' });
+
+                    // 2. 저장이 완료되면, 우리 DB에서 검색 결과를 가져와 화면에 표시 (GET)
+                    fetchContents(keyword, currentCategory);
+                } catch (error) {
+                    console.error('TMDB 검색 또는 데이터 저장 중 오류 발생:', error);
+                }
             }
         });
 
